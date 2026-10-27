@@ -3,6 +3,7 @@
 **Date:** 2026-10-27 · **Stack:** Next.js 15.5.28 (App Router), TypeScript strict, Tailwind v4, Radix-based UI, Supabase (Auth/Postgres/Storage/RLS), Vercel.
 
 **Live production URL: https://vowplan-vert.vercel.app**
+**Repository: https://github.com/adondriano/vowplan** (private; secrets excluded via .gitignore)
 
 Every claim below was executed and observed in this session. No secret values appear in this report.
 

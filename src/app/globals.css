@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+@theme {
+  /* VowPlan design system — informed by ui-ux-pro-max (Soft UI Evolution,
+     romantic pink + elegant gold, contrast-adjusted to WCAG AA). */
+  --color-primary: #9d2c4e;
+  --color-primary-hover: #822440;
+  --color-primary-soft: #f7e6eb;
+  --color-primary-foreground: #ffffff;
+  --color-accent: #a16207;
+  --color-accent-soft: #fdf3e0;
+  --color-background: #faf8f4;
+  --color-surface: #ffffff;
+  --color-surface-warm: #f4efe8;
+  --color-foreground: #3b2a2e;
+  --color-foreground-secondary: #6b585d;
+  --color-muted-foreground: #8a777c;
+  --color-border: #e8dfd8;
+  --color-border-strong: #d5c8bf;
+  --color-success: #1b7a43;
+  --color-success-soft: #e3f3e9;
+  --color-warning: #b45309;
+  --color-warning-soft: #fdf0dd;
+  --color-destructive: #c2313e;
+  --color-destructive-soft: #fbe7e9;
+  --color-info: #1d5f8a;
+  --color-info-soft: #e3eff7;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-cormorant), Georgia, serif;
+  --font-script: var(--font-vibes), cursive;
+
+  --radius-card: 0.75rem;
+  --shadow-soft: 0 1px 2px rgb(59 42 46 / 0.05), 0 4px 16px rgb(59 42 46 / 0.06);
+  --shadow-lifted: 0 2px 4px rgb(59 42 46 / 0.07), 0 12px 32px rgb(59 42 46 / 0.11);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  ::selection {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-hover);
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-script {
+    font-family: var(--font-script);
+  }
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+  }
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+  }
+  .skip-link:focus {
+    left: 8px;
+    top: 8px;
+    background: var(--color-surface);
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lifted);
+  }
+  /* Entry animations — suppressed under prefers-reduced-motion by base layer. */
+  @keyframes vp-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .animate-fade-up {
+    animation: vp-fade-up 0.35s ease-out both;
+  }
+  @keyframes vp-scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .animate-scale-in {
+    animation: vp-scale-in 0.2s ease-out both;
+  }
+  @keyframes vp-toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .animate-toast-in {
+    animation: vp-toast-in 0.25s ease-out both;
+  }
+}
+
+/* Elegant thin scrollbar for data panes */
+.thin-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 8px;
+}

@@ -86,3 +86,15 @@ The original "Wedding" project from the earlier session no longer exists under t
 - Static/shared JS unchanged and lean (103 kB shared First Load); fonts self-hosted via `next/font`.
 
 **Verification**: tsc 0 errors · vitest 53/53 · build exit 0 · deploy `dpl_3Z1zz6rms2W4f4GUL6aZYkiCnTX5` READY with `regions: ["sin1"]`, aliased to https://vowplan-vert.vercel.app · iPhone-UA smoke: `/`, `/login`, `/signup`, `/invite/*` all 200 · pushed to GitHub `main`.
+
+### Follow-up: real mobile screenshot caught the actual layout bug (commit to follow)
+
+The initial mobile audit (code review) missed a structural bug that only showed on a real
+phone: the wedding layout used `<div className="flex min-h-dvh">` (a **row**), and the
+sidebar component renders its mobile top bar (`lg:hidden`) as a **flex child** of that row.
+On phones the bar therefore became a tall empty column on the left, squeezing the whole
+dashboard into the remaining ~40% of the screen. Desktop was unaffected because `lg:hidden`
+removes the bar from the row. Fix: `flex min-h-dvh flex-col lg:flex-row` — bar stacks on top
+on mobile, reverts to sidebar row at `lg`. Verified with headless Chromium at 390×844
+against production: 0 px horizontal overflow, top bar 390×61 px pinned at the top,
+stat cards full-width (screenshot: dashboard-mobile-after.png).

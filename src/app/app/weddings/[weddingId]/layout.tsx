@@ -16,7 +16,10 @@ export default async function WeddingLayout({
   const { weddings } = await listWeddingsForUser();
 
   return (
-    <div className="flex min-h-dvh">
+    /* Column on mobile so the top bar stacks ABOVE the content; the bar is a
+       flex child of this container, so a plain `flex` row would render it as
+       a tall left-hand column and squeeze the page into the remaining sliver. */
+    <div className="flex min-h-dvh flex-col lg:flex-row">
       <a href="#main-content" className="skip-link">Skip to content</a>
       <PlannerSidebar
         weddingId={weddingId}

@@ -72,3 +72,17 @@ The original "Wedding" project from the earlier session no longer exists under t
 2. Custom domain + Supabase Site URL/redirect allow-list update when you attach one (auth redirect currently points at the vercel.app URL).
 3. Rate-limit tuning: current guest cap is 12 RSVP submissions/hour/IP — generous for households, tighten or loosen per real traffic.
 4. Optionally connect a Git repo to the Vercel project so future deploys run from pushes instead of the CLI.
+
+## Post-launch: mobile responsiveness + performance (commit b64e7d9)
+
+**Mobile**
+- Audit of every page shell, dialog, table, and grid at 375px viewport: layout system was already fluid (sidebar collapses to a sticky top bar + slide-in drawer at <lg, tables scroll horizontally, dialogs fit `100vw - 2rem`).
+- Root cause of the "off" feel on phones: iOS Safari force-zooms the viewport when focusing any input with font-size < 16px (page appears to jump). Fixed globally — 16px floor for `input/select/textarea` on ≤640px screens — plus larger `text-base` inputs on the RSVP form.
+
+**Performance**
+- Serverless functions moved from `iad1` (Virginia) to `sin1` (Singapore), colocated with the Supabase `ap-southeast-1` database. Every dynamic page previously paid ~200 ms per DB query across the Pacific; for Philippine visitors the function itself was also ~250 ms RTT away. Functions and DB now sit in the same metro.
+- Budget charts split into `budget-charts.tsx` and lazy-loaded via `next/dynamic` (`ssr: false`): `/budget` route JS **132 kB → 15.4 kB**; page First Load **287 kB → 172 kB**.
+- `next.config.ts`: `experimental.optimizePackageImports` for `lucide-react` and `recharts`.
+- Static/shared JS unchanged and lean (103 kB shared First Load); fonts self-hosted via `next/font`.
+
+**Verification**: tsc 0 errors · vitest 53/53 · build exit 0 · deploy `dpl_3Z1zz6rms2W4f4GUL6aZYkiCnTX5` READY with `regions: ["sin1"]`, aliased to https://vowplan-vert.vercel.app · iPhone-UA smoke: `/`, `/login`, `/signup`, `/invite/*` all 200 · pushed to GitHub `main`.

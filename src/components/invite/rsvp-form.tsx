@@ -215,7 +215,7 @@ export function RsvpForm({
   }
 
   const inputCls =
-    "mt-1.5 w-full rounded-xl border bg-transparent px-3.5 py-2.5 text-[15px] outline-none transition-colors focus:ring-2";
+    "mt-1.5 w-full rounded-xl border bg-transparent px-3.5 py-2.5 text-base sm:text-[15px] outline-none transition-colors focus:ring-2";
   const borderStyle = { borderColor: `${muted}55`, ["--tw-ring-color" as string]: `${primary}44` } as React.CSSProperties;
 
   if (lockedForNew) {

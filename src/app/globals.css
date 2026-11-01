@@ -159,3 +159,16 @@
   background: var(--color-border-strong);
   border-radius: 8px;
 }
+
+/* ---------------------------------------------------------------------------
+ * Mobile: prevent iOS Safari auto-zoom. Focusing any input with font-size
+ * under 16px makes iOS zoom the viewport (the "page jumps / looks broken"
+ * effect on phones). 16px on small screens fixes every form at once.
+ * ------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

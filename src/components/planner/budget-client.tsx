@@ -1,12 +1,20 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
+
+const BudgetCharts = dynamic(() => import("./budget-charts"), {
+  ssr: false,
+  loading: () => (
+    <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="h-72 animate-pulse rounded-xl bg-surface-warm" aria-hidden="true" />
+      <div className="h-72 animate-pulse rounded-xl bg-surface-warm" aria-hidden="true" />
+    </div>
+  ),
+});
 import {
   Plus, Trash2, Pencil, Wallet, PiggyBank, AlarmClock, TrendingUp, AlertTriangle,
   Download, Loader2, CalendarClock, ChevronDown, ChevronRight,
 } from "lucide-react";
-import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell,
-} from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +31,6 @@ import { createCategory, updateCategory, deleteCategory, createExpense, updateEx
 import { formatMoney, formatDate } from "@/lib/domain/format";
 import type { BudgetCategory, Expense, ExpensePayment, Vendor } from "@/lib/domain/types";
 
-const CHART_COLORS = ["#9D2C4E", "#A16207", "#1B7A43", "#1D5F8A", "#7C3AED", "#C2313E", "#B45309", "#4D7C0F", "#0E7490", "#9333EA", "#BE185D", "#57534E"];
 
 export function BudgetClient({
   weddingId,
@@ -151,50 +158,8 @@ export function BudgetClient({
         </div>
       )}
 
-      {/* Charts */}
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="!pb-0"><CardTitle>Category spending (contracted)</CardTitle></CardHeader>
-          <CardContent>
-            {pieData.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">Add expenses to see the breakdown.</p>
-            ) : (
-              <div className="h-64" role="img" aria-label="Category spending breakdown">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={2}>
-                      {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip formatter={(v) => formatMoney(Number(v), currency)} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="!pb-0"><CardTitle>Budgeted vs actual by category</CardTitle></CardHeader>
-          <CardContent>
-            {categorySpend.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">Set category budgets to compare.</p>
-            ) : (
-              <div className="h-64" role="img" aria-label="Budgeted versus actual by category">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={categorySpend.filter((c) => c.budgeted > 0 || c.contracted > 0).slice(0, 8)}>
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} angle={-20} height={50} textAnchor="end" />
-                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${Math.round(v / 1000)}k`} />
-                    <Tooltip formatter={(v) => formatMoney(Number(v), currency)} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="budgeted" name="Budgeted" fill="#D5C8BF" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="contracted" name="Contracted" fill="#9D2C4E" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {/* Charts — lazily loaded (recharts is heavy) */}
+      <BudgetCharts pieData={pieData} categorySpend={categorySpend} currency={currency} />
 
       {/* Forecast note */}
       <p className="mt-3 text-xs text-muted-foreground">

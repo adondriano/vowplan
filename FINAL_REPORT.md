@@ -124,3 +124,21 @@ stat cards full-width (screenshot: dashboard-mobile-after.png).
 Env additions on Vercel: `SUPABASE_SERVICE_ROLE_KEY` (sensitive), `NEXT_PUBLIC_SITE_URL`.
 Note: members invited BEFORE this change (status `invited`) have no email queued — remove and re-invite
 them from Settings → Collaborators to send the email.
+
+### Fix: accepting a collaborator invite failed silently
+
+Reported live: invite email received, password set — but "Accept invite" did nothing
+(no wedding in the list, no navigation). Reproduced with a headless browser and traced:
+
+1. **Root cause (DB)**: `wedding_members.user_id` has a FK to `profiles.id`, but invited
+   accounts never go through onboarding, so they have no profile row → the accept UPDATE
+   died with FK violation 23503.
+2. **Masking (action)**: `acceptWorkspaceInvite` collapsed every error into "No pending
+   invitation found for this email."
+3. **Swallowed result (client)**: `AcceptInviteButtons` ignored the action result and
+   navigated anyway, leaving the user on a stale `/app`.
+
+Fixes: the action upserts the caller's profile before accepting (and surfaces the real
+error); the client shows success/error toasts and only navigates on success.
+E2E re-verified live: accept → member row `active` + `user_id` linked + profile created →
+redirect to the wedding dashboard (screenshot accepted-dashboard.png). Test data wiped.

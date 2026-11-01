@@ -406,6 +406,18 @@ export async function acceptWorkspaceInvite(weddingId: string) {
   const { requireUser } = await import("@/lib/server/weddings");
   const { user } = await requireUser();
   const supabase = await createServerClient();
+
+  // wedding_members.user_id carries a FK to profiles.id. Invited accounts
+  // never went through onboarding, so their profile row doesn't exist yet —
+  // create it first or the accept update fails with 23503.
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .upsert(
+      { id: user.id, display_name: (user.email ?? "").split("@")[0] || null },
+      { onConflict: "id" },
+    );
+  if (profileError) return { error: profileError.message };
+
   const { data: member, error } = await supabase
     .from("wedding_members")
     .update({ status: "active", user_id: user.id })
@@ -414,7 +426,7 @@ export async function acceptWorkspaceInvite(weddingId: string) {
     .eq("status", "invited")
     .select()
     .single();
-  if (error || !member) return { error: "No pending invitation found for this email." };
+  if (error || !member) return { error: error?.message || "No pending invitation found for this email." };
   revalidatePath("/app");
   revalidatePath(`/app/weddings/${weddingId}`);
   return { ok: true as const };

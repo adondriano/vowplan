@@ -322,7 +322,9 @@ function MembersCard({ weddingId, members, role }: { weddingId: string; members:
       const r = await inviteMember(weddingId, inviteEmail, inviteRole);
       if ("error" in r && r.error) toast("error", r.error);
       else {
-        toast("success", `Invite created for ${inviteEmail}. They'll see it when they sign up with that email.`);
+        if ("note" in r && r.note) toast("info", r.note);
+        else if ("emailSent" in r && r.emailSent) toast("success", `Invitation email sent to ${inviteEmail}.`);
+        else toast("success", `Invite created for ${inviteEmail}. They'll see it when they sign up with that email.`);
         setInviteEmail("");
         router.refresh();
       }
@@ -333,7 +335,7 @@ function MembersCard({ weddingId, members, role }: { weddingId: string; members:
     <Card>
       <CardHeader>
         <CardTitle>Collaborators</CardTitle>
-        <CardDescription>Co-planners edit everything; viewers read only. Invites activate when the person signs up with that email.</CardDescription>
+        <CardDescription>Co-planners edit everything; viewers read only. They receive an email invitation — accepting links their account to this wedding.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {role === "owner" && (

@@ -1,6 +1,7 @@
 "use server";
 import { createServerClient } from "@/lib/supabase/server";
 import { requireWeddingAccess } from "@/lib/server/weddings";
+import { siteUrl } from "@/lib/server/supabase-admin";
 import { revalidatePath } from "next/cache";
 
 /* ---- Vendors ---- */
@@ -336,7 +337,9 @@ export async function inviteMember(weddingId: string, email: string, role: strin
 
   // Pending invite keyed by email; it activates when that person signs up (or
   // is signed in) with this email and accepts the invite from their workspace
-  // list. No email provider required — the invite surfaces in their planner.
+  // list. A real email is sent via Supabase Auth's invite (service role,
+  // server-side only); if delivery isn't configured the invite still works
+  // in-app.
   const { error } = await supabase.from("wedding_members").insert({
     wedding_id: weddingId,
     email: clean,
@@ -347,8 +350,29 @@ export async function inviteMember(weddingId: string, email: string, role: strin
     if (error.message.includes("duplicate")) return { error: "That email is already on this workspace." };
     return { error: error.message };
   }
+
+  // Best-effort email through Supabase Auth (built-in mailer, ~2 emails/hour
+  // on the free tier). The link signs the person in and drops them on /app
+  // where the pending invite is waiting.
+  const admin = (await import("@/lib/server/supabase-admin")).getSupabaseAdmin();
+  let emailSent = false;
+  let note: string | undefined;
+  if (admin) {
+    const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(clean, {
+      redirectTo: `${siteUrl()}/auth/callback`,
+    });
+    if (!inviteError) {
+      emailSent = true;
+    } else if (/already.*registered|already exists/i.test(inviteError.message)) {
+      note = `${clean} already has a VowPlan account — they'll see the invite in their planner.`;
+    } else {
+      note = `Invite saved, but the email couldn't be sent (${inviteError.message}). They'll still see it in their planner.`;
+    }
+  } else {
+    note = "Invite saved. Email delivery isn't configured on this deployment — they'll see the invite when they sign in.";
+  }
   revalidatePath(`/app/weddings/${weddingId}/settings`);
-  return { ok: true as const };
+  return { ok: true as const, emailSent, note };
 }
 
 export async function updateMemberRole(weddingId: string, memberId: string, role: string) {

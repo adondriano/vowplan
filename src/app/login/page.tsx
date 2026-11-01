@@ -62,6 +62,12 @@ function LoginInner() {
           {busy ? "Signing in…" : "Sign in"}
         </Button>
         <p className="text-center text-sm text-muted-foreground">
+          Forgot your password?{" "}
+          <Link href="/reset-password" className="font-medium text-primary hover:underline">
+            Reset it
+          </Link>
+        </p>
+        <p className="text-center text-sm text-muted-foreground">
           New here?{" "}
           <Link href="/signup" className="font-medium text-primary hover:underline">
             Create an account

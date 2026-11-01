@@ -765,7 +765,11 @@ create policy weddings_delete on public.weddings for delete to authenticated
 -- wedding_members
 drop policy if exists members_select on public.wedding_members;
 create policy members_select on public.wedding_members for select to authenticated
-  using (public.is_wedding_member(wedding_id) or user_id = auth.uid());
+  using (
+    user_id = auth.uid()
+    or public.is_wedding_member(wedding_id)
+    or (status = 'invited' and email = lower(coalesce(auth.email(), '')))
+  );
 
 drop policy if exists members_insert on public.wedding_members;
 create policy members_insert on public.wedding_members for insert to authenticated
@@ -773,8 +777,16 @@ create policy members_insert on public.wedding_members for insert to authenticat
 
 drop policy if exists members_update on public.wedding_members;
 create policy members_update on public.wedding_members for update to authenticated
-  using (public.wedding_role(wedding_id) = 'owner' or user_id = auth.uid())
-  with check (public.wedding_role(wedding_id) = 'owner' or user_id = auth.uid());
+  using (
+    public.wedding_role(wedding_id) = 'owner'
+    or user_id = auth.uid()
+    or (status = 'invited' and email = lower(coalesce(auth.email(), '')))
+  )
+  with check (
+    public.wedding_role(wedding_id) = 'owner'
+    or user_id = auth.uid()
+    or (email = lower(coalesce(auth.email(), '')) and status in ('active', 'declined'))
+  );
 
 drop policy if exists members_delete on public.wedding_members;
 create policy members_delete on public.wedding_members for delete to authenticated

@@ -98,3 +98,29 @@ removes the bar from the row. Fix: `flex min-h-dvh flex-col lg:flex-row` — bar
 on mobile, reverts to sidebar row at `lg`. Verified with headless Chromium at 390×844
 against production: 0 px horizontal overflow, top bar 390×61 px pinned at the top,
 stat cards full-width (screenshot: dashboard-mobile-after.png).
+
+## Collaborator invite emails + brand favicon
+
+**Email invitations (Supabase Auth built-in mailer — no third-party account needed)**
+- `inviteMember` now calls `inviteUserByEmail` server-side via a new service-role admin client
+  (`src/lib/server/supabase-admin.ts`; key stored as `SUPABASE_SERVICE_ROLE_KEY`, server-only, never bundled).
+- Toast reflects the real outcome: "Invitation email sent" / already-registered note / fallback note.
+- Supabase auth `site_url` fixed (was `http://localhost:3000`!) → `https://vowplan-vert.vercel.app`, redirect allow-list added.
+- `/auth/callback` now completes both PKCE (`?code=`) and implicit (`#access_token=`) email links
+  (new client page `/auth/client-callback`), then lands on `/app` where the invite banner waits.
+- Invited accounts are created passwordless: `/app` shows a "Finish setting up your account" card
+  (detected via `invited_at` + `password_set` metadata) and a full forgot-password flow exists
+  (`/reset-password` → email → `/account/password`); login page links to it.
+- RLS fix: invited member rows (`user_id` null) were invisible/unacceptable under the old policies —
+  `members_select`/`members_update` now also match `status='invited' and email = auth.email()`
+  (applied to migration + local + cloud).
+- **E2E proven live**: real email received from Supabase → link clicked in a fresh browser → signed in →
+  invite banner shown → password set → re-login with email+password works. Test data wiped after.
+
+**Favicon / brand icon**
+- Replaced the default Vercel icon: `src/app/icon.svg`, `favicon.ico` (16/32/48), `apple-icon.png`
+  — white heart on the VowPlan plum (#9D2C4E). Live and byte-verified.
+
+Env additions on Vercel: `SUPABASE_SERVICE_ROLE_KEY` (sensitive), `NEXT_PUBLIC_SITE_URL`.
+Note: members invited BEFORE this change (status `invited`) have no email queued — remove and re-invite
+them from Settings → Collaborators to send the email.

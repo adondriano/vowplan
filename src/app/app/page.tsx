@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Heart, Plus, CalendarDays, Users, Inbox } from "lucide-react";
-import { listWeddingsForUser } from "@/lib/server/weddings";
+import { listWeddingsForUser, requireUser } from "@/lib/server/weddings";
+import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
+import { SetPasswordCard } from "@/components/planner/set-password-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -17,8 +19,26 @@ export default async function WorkspaceListPage() {
     redirect("/onboarding");
   }
 
+  // Invited accounts start without a password (they sign in via the email
+  // link) — prompt them to choose one before the session expires. Hosted
+  // Supabase redacts encrypted_password, so detect via invited_at + a
+  // metadata flag the "set password" card writes when done.
+  const needsPassword = await (async () => {
+    try {
+      const { user } = await requireUser();
+      const admin = getSupabaseAdmin();
+      if (!admin) return false;
+      const { data } = await admin.auth.admin.getUserById(user.id);
+      const u = data?.user;
+      return Boolean(u?.invited_at && !(u.user_metadata as { password_set?: boolean } | null)?.password_set);
+    } catch {
+      return false;
+    }
+  })();
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
+      {needsPassword && <SetPasswordCard />}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Heart className="size-5 text-primary" aria-hidden="true" />
